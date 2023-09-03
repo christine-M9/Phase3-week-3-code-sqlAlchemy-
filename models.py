@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, func
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -16,6 +16,13 @@ class Restaurant(Base):
     reviews = relationship('Review', back_populates='restaurant')
     customers = relationship('Customer', secondary='reviews', back_populates='restaurants')
 
+    @classmethod
+    def fanciest(cls):
+        return session.query(cls).order_by(cls.price.desc()).first()
+
+    def all_reviews(self):
+        return [f"Review for {self.name} by {customer.full_name()}: {review.star_rating} stars." for review in self.reviews]
+
     def reviews(self):
         return [review for review in self.reviews]
 
@@ -31,6 +38,21 @@ class Customer(Base):
 
     reviews = relationship('Review', back_populates='customer')
     restaurants = relationship('Restaurant', secondary='reviews', back_populates='customers')
+
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+    def favorite_restaurant(self):
+        return session.query(Restaurant).filter(
+            Restaurant.reviews.any(customer=self)
+        ).order_by(Restaurant.price.desc()).first()
+
+    def add_review(self, restaurant, rating):
+        review = Review(star_rating=rating, restaurant=restaurant, customer=self)
+        session.add(review)
+
+    def delete_reviews(self, restaurant):
+        session.query(Review).filter(Review.restaurant == restaurant, Review.customer == self).delete()
 
     def reviews(self):
         return [review for review in self.reviews]
@@ -49,11 +71,8 @@ class Review(Base):
     restaurant = relationship('Restaurant', back_populates='reviews')
     customer = relationship('Customer', back_populates='reviews')
 
-    def customer(self):
-        return self.customer
-
-    def restaurant(self):
-        return self.restaurant
+    def full_review(self):
+        return f"Review for {self.restaurant.name} by {self.customer.full_name()}: {self.star_rating} stars."
 
 if __name__ == '__main__':
     Base.metadata.create_all(engine)
