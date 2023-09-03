@@ -4,9 +4,9 @@ from models import Restaurant, Customer, Review
 from faker import Faker 
 
 # Creating an SQLite database engine
-engine = create_engine('sqlite:///my_database.db')
+engine = create_engine('sqlite:///database.db')
 
-# Creatng a session
+# Creating a session
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -30,8 +30,9 @@ for _ in range(20):
                     customer=fake.random_element(elements=session.query(Customer).all()))
     session.add(review)
 
-# Commiting the changes to the database
+# Committing the changes to the database
 session.commit()
 
 # Closing the session
 session.close()
+
