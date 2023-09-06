@@ -12,7 +12,7 @@ SessionFactory = sessionmaker(bind=engine)
 # Create a base class for declarative class definitions
 Base = declarative_base()
 
-# Define your models
+# Defining models
 class Restaurant(Base):
     __tablename__ = 'restaurants'
 
